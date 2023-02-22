@@ -1,0 +1,7 @@
+termato
+
+# zig stuff
+zig-cache/
+zig-out/
+
+release/
