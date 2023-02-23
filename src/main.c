@@ -108,7 +108,11 @@ int main(int argc, char **argv) {
         .positional_num = &positional_num,
         .positional_cap = 0,
         .usage_description = "TUI pomodoro timer",
-        .extra_usage_text = "Press SPACE to pause or unpause your session.",
+        .extra_usage_text =
+        "KEYBINDS:\n"
+        "SPACE\tpause or unpause your session\n"
+        "s\tskip to the next period"
+        ,
     });
     if (args_return != ARGS_RETURN_CONTINUE) return args_return;
 
@@ -204,6 +208,7 @@ int main(int argc, char **argv) {
         timeout(1000);
 
         int c = getch();
+        if (c == 's') remaining_time = 0;
         if (c == 'q') break;
         if (c == ' ') paused = true;
         if (paused) {
