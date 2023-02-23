@@ -1,5 +1,5 @@
 // args.h - simple and robust command line argument parsing - felix-u 2023
-// 2023-02-22
+// 2023-02-23
 //
 //    This is an stb-style single-header-file C library.
 //
@@ -179,6 +179,7 @@ typedef struct args_Proc_Args {
     size_t *positional_num;
     char **positional_args;
     const char *usage_description;
+    const char *extra_usage_text;
     const ARGS_FLAG_EXPECTS positional_expects;
     const ARGS_BINARY_POSITIONAL_TYPE positional_type;
     const size_t positional_cap;
@@ -501,6 +502,8 @@ int args_proc (args_Proc_Args a) {
         }
         putchar('\n');
         if (any_mandatory) printf("Options marked with '*' are mandatory.\n");
+
+        if (a.extra_usage_text != 0) printf("\n%s\n", a.extra_usage_text);
 
         printf("\nOPTIONS:\n");
         for (size_t i = 0; i < a.flags_count; i++) {
