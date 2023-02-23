@@ -12,7 +12,7 @@
 #include "./better_int_types.h"
 
 #define MIN 1
-#define TIME_STR_LEN 32
+#define STR_CAP 32
 #define DEFAULT_WORK (25 * MIN)
 #define DEFAULT_BREAK_SHORT (5 * MIN)
 #define DEFAULT_BREAK_LONG (20 * MIN)
@@ -23,9 +23,15 @@ typedef struct State {
         STAGE_WORK,
         STAGE_BREAK_SHORT,
         STAGE_BREAK_LONG,
+        STAGE_COUNT,
     } stage;
     usize session;
 } State;
+const char *stage_names[STAGE_COUNT] = {
+    "Focus",
+    "Short break",
+    "Long break",
+};
 
 
 bool strIsDigits(char *str) {
@@ -120,8 +126,6 @@ int main(int argc, char **argv) {
         .session = 1,
     };
 
-    char *stage_name = "Focus";
-
     bool should_quit = false;
 
     int width = 0, height = 0;
@@ -132,18 +136,18 @@ int main(int argc, char **argv) {
     nodelay(stdscr, TRUE);
     for (;; napms(1), erase(), refresh()) {
         getmaxyx(stdscr, height, width);
+        usize target_y = height / 2;
+        usize target_x = 0;
 
         if (remaining_time == 0) {
             bool completed_set = !(state.session % sessions);
             if (state.stage == STAGE_WORK) {
                 if (completed_set) {
                     state.stage = STAGE_BREAK_LONG;
-                    stage_name = "Long break";
                     end_time = time(NULL) + duration_break_long;
                 }
                 else {
                     state.stage = STAGE_BREAK_SHORT;
-                    stage_name = "Short break";
                     end_time = time(NULL) + duration_break_short;
                 }
             }
@@ -151,7 +155,6 @@ int main(int argc, char **argv) {
                 if (completed_set) state.session = 1;
                 else state.session += 1;
                 state.stage = STAGE_WORK;
-                stage_name = "Focus";
                 end_time = time(NULL) + duration_work;
             }
         }
@@ -160,9 +163,19 @@ int main(int argc, char **argv) {
         usize remaining_mins = remaining_time / MIN;
         usize remaining_secs = remaining_time % MIN;
 
-        char remaining_time_str[TIME_STR_LEN];
-        snprintf(remaining_time_str, TIME_STR_LEN, "%s: %02ld:%02ld (session %ld)", stage_name, remaining_mins, remaining_secs, state.session);
-        mvaddstr(height / 2, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
+        char remaining_time_str[STR_CAP];
+        snprintf(remaining_time_str, STR_CAP, "%02ld:%02ld", remaining_mins, remaining_secs);
+        target_x = (width - strlen(remaining_time_str)) / 2;
+        mvaddstr(target_y - 1, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
+
+        char stage_str[STR_CAP];
+        if (state.stage == STAGE_WORK) {
+            snprintf(stage_str, STR_CAP, "%s (%ld/%ld)", stage_names[state.stage], state.session, sessions);
+        }
+        else {
+            snprintf(stage_str, STR_CAP, "%s", stage_names[state.stage]);
+        }
+        mvaddstr(target_y, (width - strlen(stage_str)) / 2, stage_str);
 
         timeout(1000);
 
@@ -170,6 +183,9 @@ int main(int argc, char **argv) {
         if (c == 'q') break;
         if (c == ' ') {
             time_t pause_time = time(NULL);
+            const char *pause_text = "[Paused]";
+            mvaddstr(target_y + 1, (width - strlen(pause_text)) / 2, pause_text);
+            refresh();
             for (;;) {
                 c = getch();
                 if (c == ' ') {
