@@ -1,4 +1,4 @@
-NAME=termato
+NAME=$(notdir $(CURDIR))
 VERSION=0.1-dev
 
 src = $(wildcard src/*.c)
@@ -9,9 +9,10 @@ CFLAGS=-std=c99 -pedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow \
 DEBUGFLAGS=-Og -g -ggdb
 RELEASEFLAGS=-O3 -s -march=native
 LIBS=-lncurses
+
 CROSSCC=zig cc
 
-default: $(obj)
+debug: $(obj)
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) $(LIBS) -o $(NAME) $^
 
 release: $(obj)
@@ -33,4 +34,4 @@ install: release copy
 
 .PHONY: clean
 clean:
-	rm -f $(obj) progdebug
+	rm -f $(obj) debug

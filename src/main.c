@@ -11,7 +11,7 @@
 #include "./args.h"
 #include "./better_int_types.h"
 
-#define MIN 1
+#define MIN 60
 #define STR_CAP 256
 #define DEFAULT_WORK (25 * MIN)
 #define DEFAULT_BREAK_SHORT (5 * MIN)
@@ -55,24 +55,24 @@ int flagIsNum(args_Flag flag) {
 
 int main(int argc, char **argv) {
 
+    args_Flag focus_flag = {
+        .name_short = 'f',
+        .name_long = "focus",
+        .help_text = "specify the length of focus periods, in minutes (default: 25)",
+        .type = ARGS_SINGLE_OPT,
+        .expects = ARGS_EXPECTS_NUM,
+    };
     args_Flag break_short_flag = {
         .name_short = 'b',
         .name_long = "short-break",
-        .help_text = "specify the length of time for short break periods, in minutes (default: 5)",
+        .help_text = "specify the length of short break periods, in minutes (default: 5)",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
     };
     args_Flag break_long_flag = {
         .name_short = 'l',
         .name_long = "long-break",
-        .help_text = "specify the length of time for long break periods, in minutes (default: 20)",
-        .type = ARGS_SINGLE_OPT,
-        .expects = ARGS_EXPECTS_NUM,
-    };
-    args_Flag work_flag = {
-        .name_short = 'w',
-        .name_long = "work",
-        .help_text = "specify the length of time for work periods, in minutes (default: 25)",
+        .help_text = "specify the length of long break periods, in minutes (default: 20)",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
     };
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
         .expects = ARGS_EXPECTS_NUM,
     };
     args_Flag *flags[] = {
-        &work_flag,
+        &focus_flag,
         &break_short_flag,
         &break_long_flag,
         &sessions_flag,
@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
     });
     if (args_return != ARGS_RETURN_CONTINUE) return args_return;
 
-    int flag_check_return = flagIsNum(work_flag);
+    int flag_check_return = flagIsNum(focus_flag);
     if (flag_check_return != ARGS_RETURN_CONTINUE) return flag_check_return;
     flag_check_return = flagIsNum(break_short_flag);
     if (flag_check_return != ARGS_RETURN_CONTINUE) return flag_check_return;
@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
     flag_check_return = flagIsNum(sessions_flag);
     if (flag_check_return != ARGS_RETURN_CONTINUE) return flag_check_return;
 
-    usize duration_work = work_flag.is_present ? atoi(work_flag.opts[0]) * MIN : DEFAULT_WORK;
+    usize duration_work = focus_flag.is_present ? atoi(focus_flag.opts[0]) * MIN : DEFAULT_WORK;
     usize duration_break_short =
         break_short_flag.is_present ? atoi(break_short_flag.opts[0]) * MIN : DEFAULT_BREAK_SHORT;
     usize duration_break_long =
