@@ -12,7 +12,7 @@
 #include "./better_int_types.h"
 
 #define MIN 1
-#define STR_CAP 32
+#define STR_CAP 64
 #define DEFAULT_WORK (25 * MIN)
 #define DEFAULT_BREAK_SHORT (5 * MIN)
 #define DEFAULT_BREAK_LONG (20 * MIN)
@@ -136,6 +136,8 @@ int main(int argc, char **argv) {
 
     bool should_quit = false;
 
+    char stage_str[STR_CAP];
+
     int width = 0, height = 0;
     initscr();
     cbreak();
@@ -144,10 +146,16 @@ int main(int argc, char **argv) {
     nodelay(stdscr, TRUE);
     for (;; napms(1), erase(), refresh()) {
         getmaxyx(stdscr, height, width);
-        usize target_x = 0;
 
         if (remaining_time == 0) {
-            if (alert_flag.is_present) system(alert_flag.opts[0]);
+            if (alert_flag.is_present) {
+                usize alert_len = strlen(alert_flag.opts[0]) + STR_CAP;
+                char alert_str[alert_len];
+                snprintf(alert_str, alert_len, alert_flag.opts[0], "\"%s\"");
+                char alert_str_2[alert_len];
+                snprintf(alert_str_2, alert_len, alert_str, stage_str);
+                system(alert_str_2);
+            }
             bool completed_set = !(state.session % sessions);
             if (state.stage == STAGE_WORK) {
                 if (completed_set) {
@@ -173,10 +181,8 @@ int main(int argc, char **argv) {
 
         char remaining_time_str[STR_CAP];
         snprintf(remaining_time_str, STR_CAP, "%02ld:%02ld", remaining_mins, remaining_secs);
-        target_x = (width - strlen(remaining_time_str)) / 2;
         mvaddstr(height / 2 - 1, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
 
-        char stage_str[STR_CAP];
         if (state.stage == STAGE_WORK) {
             snprintf(stage_str, STR_CAP, "%s (%ld/%ld)", stage_names[state.stage], state.session, sessions);
         }
