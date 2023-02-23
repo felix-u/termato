@@ -136,7 +136,6 @@ int main(int argc, char **argv) {
     nodelay(stdscr, TRUE);
     for (;; napms(1), erase(), refresh()) {
         getmaxyx(stdscr, height, width);
-        usize target_y = height / 2;
         usize target_x = 0;
 
         if (remaining_time == 0) {
@@ -166,7 +165,7 @@ int main(int argc, char **argv) {
         char remaining_time_str[STR_CAP];
         snprintf(remaining_time_str, STR_CAP, "%02ld:%02ld", remaining_mins, remaining_secs);
         target_x = (width - strlen(remaining_time_str)) / 2;
-        mvaddstr(target_y - 1, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
+        mvaddstr(height / 2 - 1, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
 
         char stage_str[STR_CAP];
         if (state.stage == STAGE_WORK) {
@@ -175,7 +174,7 @@ int main(int argc, char **argv) {
         else {
             snprintf(stage_str, STR_CAP, "%s", stage_names[state.stage]);
         }
-        mvaddstr(target_y, (width - strlen(stage_str)) / 2, stage_str);
+        mvaddstr(height / 2, (width - strlen(stage_str)) / 2, stage_str);
 
         timeout(1000);
 
@@ -183,10 +182,16 @@ int main(int argc, char **argv) {
         if (c == 'q') break;
         if (c == ' ') {
             time_t pause_time = time(NULL);
-            const char *pause_text = "[Paused]";
-            mvaddstr(target_y + 1, (width - strlen(pause_text)) / 2, pause_text);
-            refresh();
             for (;;) {
+                napms(1);
+                erase();
+                getmaxyx(stdscr, height, width);
+                const char *pause_text = "[Paused]";
+                mvaddstr(height / 2 - 1, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
+                mvaddstr(height / 2, (width - strlen(stage_str)) / 2, stage_str);
+                mvaddstr(height / 2 + 1, (width - strlen(pause_text)) / 2, pause_text);
+                refresh();
+
                 c = getch();
                 if (c == ' ') {
                     end_time += time(NULL) - pause_time;
