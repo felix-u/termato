@@ -55,13 +55,6 @@ int flagIsNum(args_Flag flag) {
 
 int main(int argc, char **argv) {
 
-    args_Flag work_flag = {
-        .name_short = 'w',
-        .name_long = "work",
-        .help_text = "specify the length of time for work periods, in minutes (default: 25)",
-        .type = ARGS_SINGLE_OPT,
-        .expects = ARGS_EXPECTS_NUM,
-    };
     args_Flag break_short_flag = {
         .name_short = 'b',
         .name_long = "short-break",
@@ -76,10 +69,10 @@ int main(int argc, char **argv) {
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
     };
-    args_Flag sessions_flag = {
-        .name_short = 's',
-        .name_long = "sessions",
-        .help_text = "specify the number of work periods before a long break (default: 4)",
+    args_Flag work_flag = {
+        .name_short = 'w',
+        .name_long = "work",
+        .help_text = "specify the length of time for work periods, in minutes (default: 25)",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
     };
@@ -90,6 +83,13 @@ int main(int argc, char **argv) {
                      "occurrence of `%s` will be substituted with the new timer state",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_STRING,
+    };
+    args_Flag sessions_flag = {
+        .name_short = 's',
+        .name_long = "sessions",
+        .help_text = "specify the number of work periods before a long break (default: 4)",
+        .type = ARGS_SINGLE_OPT,
+        .expects = ARGS_EXPECTS_NUM,
     };
     args_Flag *flags[] = {
         &work_flag,
@@ -148,6 +148,8 @@ int main(int argc, char **argv) {
     for (;; napms(1), erase(), refresh()) {
         getmaxyx(stdscr, height, width);
 
+        bool paused = false;
+
         if (remaining_time == 0) {
             if (notify_flag.is_present) {
                 usize notify_len = strlen(notify_flag.opts[0]) + STR_CAP;
@@ -196,7 +198,8 @@ int main(int argc, char **argv) {
 
         int c = getch();
         if (c == 'q') break;
-        if (c == ' ') {
+        if (c == ' ') paused = true;
+        if (paused) {
             time_t pause_time = time(NULL);
             for (;;) {
                 napms(1);
