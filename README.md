@@ -1,14 +1,23 @@
 # termato
 
-`termato` is a configurable TUI pomodoro timer which can run an arbitrary command upon state change.
+`termato` is a simple TUI pomodoro timer which can run arbitrary commands upon state change.
 
 ![GIF/screenshot](./fix/this/path)
 
-Licensed under [GPL-3.0](./LICENCE). To get `termato`,
-[download the latest release](https://github.com/felix-u/termato/releases/)
-or follow the [compilation instructions](#building).
+Licensed under [GPL-3.0](./LICENCE). To build `termato`, follow the [compilation instructions](#building).
 
 *Disclaimer: `termato` is not yet stable and is subject to change in upcoming versions.*
+
+### Examples
+
+You can use the `--notify` flag to run an arbitrary command upon state change. For example, if you had `notify-send`
+installed, you could run
+```sh
+$ termato --notify "notify-send 'termato: %s'"
+```
+The `%s` format specifier is replaced with information about the new work or break period:
+![Notification screenshot](./notification_screenshot.png)
+
 
 ### Usage
 ```
@@ -45,8 +54,8 @@ You will need:
 - a `make` implementation, such as `gnumake`
 - `ncurses`
 
-Using `git`, clone the source code and navigate to the desired release, where `X.X` is the version number. Building
-from the `master` branch is highly discouraged.
+Using `git`, clone the source code and navigate to the desired release, where `X.X` is the version number. Building from
+the `master` branch is discouraged.
 ```sh
 $ git clone https://github.com/felix-u/termato
 $ git checkout vX.X

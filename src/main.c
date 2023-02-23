@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
             if (notify_flag.is_present) {
                 usize notify_len = strlen(notify_flag.opts[0]) + STR_CAP;
                 char notify_str[notify_len];
-                snprintf(notify_str, notify_len, notify_flag.opts[0], "\"%s - %ld minutes\"");
+                snprintf(notify_str, notify_len, notify_flag.opts[0], "%s - %ld minutes");
                 char notify_str_2[notify_len];
                 snprintf(notify_str_2, notify_len, notify_str, stage_str, durations[state.stage] / MIN);
                 system(notify_str_2);
