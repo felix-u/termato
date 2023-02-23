@@ -12,7 +12,7 @@
 #include "./better_int_types.h"
 
 #define MIN 1
-#define STR_CAP 64
+#define STR_CAP 256
 #define DEFAULT_WORK (25 * MIN)
 #define DEFAULT_BREAK_SHORT (5 * MIN)
 #define DEFAULT_BREAK_LONG (20 * MIN)
@@ -83,10 +83,11 @@ int main(int argc, char **argv) {
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
     };
-    args_Flag alert_flag = {
-        .name_short = 'a',
-        .name_long = "alert",
-        .help_text = "specify a command to run upon timer state change (default: none)",
+    args_Flag notify_flag = {
+        .name_short = 'n',
+        .name_long = "notify",
+        .help_text = "specify a command to run upon timer state change (default: none)\nThe first "
+                     "occurrence of `%s` will be substituted with the new timer state",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_STRING,
     };
@@ -95,7 +96,7 @@ int main(int argc, char **argv) {
         &break_short_flag,
         &break_long_flag,
         &sessions_flag,
-        &alert_flag,
+        &notify_flag,
         &ARGS_HELP_FLAG,
         &ARGS_VERSION_FLAG,
     };
@@ -148,13 +149,13 @@ int main(int argc, char **argv) {
         getmaxyx(stdscr, height, width);
 
         if (remaining_time == 0) {
-            if (alert_flag.is_present) {
-                usize alert_len = strlen(alert_flag.opts[0]) + STR_CAP;
-                char alert_str[alert_len];
-                snprintf(alert_str, alert_len, alert_flag.opts[0], "\"%s\"");
-                char alert_str_2[alert_len];
-                snprintf(alert_str_2, alert_len, alert_str, stage_str);
-                system(alert_str_2);
+            if (notify_flag.is_present) {
+                usize notify_len = strlen(notify_flag.opts[0]) + STR_CAP;
+                char notify_str[notify_len];
+                snprintf(notify_str, notify_len, notify_flag.opts[0], "\"%s\"");
+                char notify_str_2[notify_len];
+                snprintf(notify_str_2, notify_len, notify_str, stage_str);
+                system(notify_str_2);
             }
             bool completed_set = !(state.session % sessions);
             if (state.stage == STAGE_WORK) {
