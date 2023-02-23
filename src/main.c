@@ -11,16 +11,16 @@
 #include "./args.h"
 #include "./better_int_types.h"
 
-#define MIN 60
+#define MIN 1
 #define STR_CAP 256
-#define DEFAULT_WORK (25 * MIN)
+#define DEFAULT_FOCUS (25 * MIN)
 #define DEFAULT_BREAK_SHORT (5 * MIN)
 #define DEFAULT_BREAK_LONG (20 * MIN)
 #define DEFAULT_SESSIONS 4
 
 typedef struct State {
     enum {
-        STAGE_WORK,
+        STAGE_FOCUS,
         STAGE_BREAK_SHORT,
         STAGE_BREAK_LONG,
         STAGE_COUNT,
@@ -29,8 +29,8 @@ typedef struct State {
 } State;
 const char *stage_names[STAGE_COUNT] = {
     "Focus",
-    "Short break",
-    "Long break",
+    "Relax",
+    "Break",
 };
 
 
@@ -120,18 +120,24 @@ int main(int argc, char **argv) {
     flag_check_return = flagIsNum(sessions_flag);
     if (flag_check_return != ARGS_RETURN_CONTINUE) return flag_check_return;
 
-    usize duration_work = focus_flag.is_present ? atoi(focus_flag.opts[0]) * MIN : DEFAULT_WORK;
-    usize duration_break_short =
+    usize durations[STAGE_COUNT] = {
+        DEFAULT_FOCUS,
+        DEFAULT_BREAK_SHORT,
+        DEFAULT_BREAK_LONG,
+    };
+
+    durations[STAGE_FOCUS] = focus_flag.is_present ? atoi(focus_flag.opts[0]) * MIN : DEFAULT_FOCUS;
+    durations[STAGE_BREAK_SHORT] =
         break_short_flag.is_present ? atoi(break_short_flag.opts[0]) * MIN : DEFAULT_BREAK_SHORT;
-    usize duration_break_long =
+    durations[STAGE_BREAK_LONG] =
         break_long_flag.is_present ? atoi(break_long_flag.opts[0]) * MIN : DEFAULT_BREAK_LONG;
     usize sessions = sessions_flag.is_present ? atoi(sessions_flag.opts[0]) * MIN : DEFAULT_SESSIONS;
 
-    time_t end_time = time(NULL) + duration_work;
-    usize remaining_time = duration_work;
+    time_t end_time = time(NULL) + durations[STAGE_FOCUS];
+    usize remaining_time = durations[STAGE_FOCUS];
 
     State state = {
-        .stage = STAGE_WORK,
+        .stage = STAGE_FOCUS,
         .session = 1,
     };
 
@@ -154,27 +160,27 @@ int main(int argc, char **argv) {
             if (notify_flag.is_present) {
                 usize notify_len = strlen(notify_flag.opts[0]) + STR_CAP;
                 char notify_str[notify_len];
-                snprintf(notify_str, notify_len, notify_flag.opts[0], "\"%s\"");
+                snprintf(notify_str, notify_len, notify_flag.opts[0], "\"%s - %ld minutes\"");
                 char notify_str_2[notify_len];
-                snprintf(notify_str_2, notify_len, notify_str, stage_str);
+                snprintf(notify_str_2, notify_len, notify_str, stage_str, durations[state.stage] / MIN);
                 system(notify_str_2);
             }
             bool completed_set = !(state.session % sessions);
-            if (state.stage == STAGE_WORK) {
+            if (state.stage == STAGE_FOCUS) {
                 if (completed_set) {
                     state.stage = STAGE_BREAK_LONG;
-                    end_time = time(NULL) + duration_break_long;
+                    end_time = time(NULL) + durations[STAGE_BREAK_LONG];
                 }
                 else {
                     state.stage = STAGE_BREAK_SHORT;
-                    end_time = time(NULL) + duration_break_short;
+                    end_time = time(NULL) + durations[STAGE_BREAK_SHORT];
                 }
             }
             else {
                 if (completed_set) state.session = 1;
                 else state.session += 1;
-                state.stage = STAGE_WORK;
-                end_time = time(NULL) + duration_work;
+                state.stage = STAGE_FOCUS;
+                end_time = time(NULL) + durations[STAGE_FOCUS];
             }
         }
 
@@ -186,7 +192,7 @@ int main(int argc, char **argv) {
         snprintf(remaining_time_str, STR_CAP, "%02ld:%02ld", remaining_mins, remaining_secs);
         mvaddstr(height / 2 - 1, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
 
-        if (state.stage == STAGE_WORK) {
+        if (state.stage == STAGE_FOCUS) {
             snprintf(stage_str, STR_CAP, "%s (%ld/%ld)", stage_names[state.stage], state.session, sessions);
         }
         else {
