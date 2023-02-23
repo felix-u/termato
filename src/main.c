@@ -11,7 +11,7 @@
 #include "./args.h"
 #include "./better_int_types.h"
 
-#define MIN 1
+#define MIN 60
 #define STR_CAP 256
 #define DEFAULT_FOCUS (25 * MIN)
 #define DEFAULT_BREAK_SHORT (5 * MIN)
