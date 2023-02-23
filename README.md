@@ -2,7 +2,7 @@
 
 `termato` is a simple TUI pomodoro timer which can run arbitrary commands upon state change.
 
-![GIF/screenshot](./fix/this/path)
+![Screenshot](./screenshot.png)
 
 Licensed under [GPL-3.0](./LICENCE). To build `termato`, follow the [compilation instructions](#building).
 

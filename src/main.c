@@ -149,6 +149,7 @@ int main(int argc, char **argv) {
     bool should_quit = false;
 
     char stage_str[STR_CAP];
+    snprintf(stage_str, STR_CAP, "%s (%ld/%ld)", stage_names[state.stage], state.session, sessions);
 
     int width = 0, height = 0;
     initscr();
@@ -162,14 +163,6 @@ int main(int argc, char **argv) {
         bool paused = false;
 
         if (remaining_time == 0) {
-            if (notify_flag.is_present) {
-                usize notify_len = strlen(notify_flag.opts[0]) + STR_CAP;
-                char notify_str[notify_len];
-                snprintf(notify_str, notify_len, notify_flag.opts[0], "%s - %ld minutes");
-                char notify_str_2[notify_len];
-                snprintf(notify_str_2, notify_len, notify_str, stage_str, durations[state.stage] / MIN);
-                system(notify_str_2);
-            }
             bool completed_set = !(state.session % sessions);
             if (state.stage == STAGE_FOCUS) {
                 if (completed_set) {
@@ -180,12 +173,22 @@ int main(int argc, char **argv) {
                     state.stage = STAGE_BREAK_SHORT;
                     end_time = time(NULL) + durations[STAGE_BREAK_SHORT];
                 }
+                snprintf(stage_str, STR_CAP, "%s", stage_names[state.stage]);
             }
             else {
                 if (completed_set) state.session = 1;
                 else state.session += 1;
                 state.stage = STAGE_FOCUS;
+                snprintf(stage_str, STR_CAP, "%s (%ld/%ld)", stage_names[state.stage], state.session, sessions);
                 end_time = time(NULL) + durations[STAGE_FOCUS];
+            }
+            if (notify_flag.is_present) {
+                usize notify_len = strlen(notify_flag.opts[0]) + STR_CAP;
+                char notify_str[notify_len];
+                snprintf(notify_str, notify_len, notify_flag.opts[0], "%s - %ld minutes");
+                char notify_str_2[notify_len];
+                snprintf(notify_str_2, notify_len, notify_str, stage_str, durations[state.stage] / MIN);
+                system(notify_str_2);
             }
         }
 
@@ -196,13 +199,6 @@ int main(int argc, char **argv) {
         char remaining_time_str[STR_CAP];
         snprintf(remaining_time_str, STR_CAP, "%02ld:%02ld", remaining_mins, remaining_secs);
         mvaddstr(height / 2 - 1, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
-
-        if (state.stage == STAGE_FOCUS) {
-            snprintf(stage_str, STR_CAP, "%s (%ld/%ld)", stage_names[state.stage], state.session, sessions);
-        }
-        else {
-            snprintf(stage_str, STR_CAP, "%s", stage_names[state.stage]);
-        }
         mvaddstr(height / 2, (width - strlen(stage_str)) / 2, stage_str);
 
         timeout(1000);
