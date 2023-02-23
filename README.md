@@ -16,8 +16,8 @@ installed, you could run
 $ termato --notify "notify-send 'termato: %s'"
 ```
 The `%s` format specifier is replaced with information about the new work or break period:
-![Notification screenshot](./notification_screenshot.png)
 
+<img src="./notification_screenshot.png" width="20%"/>
 
 ### Usage
 ```
