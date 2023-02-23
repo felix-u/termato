@@ -11,12 +11,40 @@
 #include "./args.h"
 #include "./better_int_types.h"
 
-
-#define TIME_STR_LEN 16
-#define DEFAULT_WORK (25 * 60)
-#define DEFAULT_BREAK_SHORT (5 * 60)
-#define DEFAULT_BREAK_LONG (20 * 60)
+#define MIN 1
+#define TIME_STR_LEN 32
+#define DEFAULT_WORK (25 * MIN)
+#define DEFAULT_BREAK_SHORT (5 * MIN)
+#define DEFAULT_BREAK_LONG (20 * MIN)
 #define DEFAULT_SESSIONS 4
+
+typedef struct State {
+    enum {
+        STAGE_WORK,
+        STAGE_BREAK_SHORT,
+        STAGE_BREAK_LONG,
+    } stage;
+    usize session;
+} State;
+
+
+bool strIsDigits(char *str) {
+    for (usize i = 0; i < strlen(str); i++) {
+        if (str[i] < '0' || str[i] > '9') return false;
+    }
+    return true;
+}
+
+
+int flagIsNum(args_Flag flag) {
+    if (!flag.is_present) return ARGS_RETURN_CONTINUE;
+    if (!strIsDigits(flag.opts[0])) {
+        printf("%s: '%s' is not a valid numeric value\n", ARGS_BINARY_NAME, flag.opts[0]);
+        args_helpHint();
+        return EX_USAGE;
+    }
+    return ARGS_RETURN_CONTINUE;
+}
 
 
 int main(int argc, char **argv) {
@@ -68,15 +96,31 @@ int main(int argc, char **argv) {
     });
     if (args_return != ARGS_RETURN_CONTINUE) return args_return;
 
-    usize duration_work = work_flag.is_present ? atoi(work_flag.opts[0]) * 60 : DEFAULT_WORK;
-    usize duration_break_short =
-        break_short_flag.is_present ? atoi(break_short_flag.opts[0]) * 60 : DEFAULT_BREAK_SHORT;
-    usize duration_break_long =
-        break_long_flag.is_present ? atoi(break_long_flag.opts[0]) * 60 : DEFAULT_BREAK_LONG;
-    usize sessions = sessions_flag.is_present ? atoi(sessions_flag.opts[0]) * 60 : DEFAULT_SESSIONS;
+    int flag_check_return = flagIsNum(work_flag);
+    if (flag_check_return != ARGS_RETURN_CONTINUE) return flag_check_return;
+    flag_check_return = flagIsNum(break_short_flag);
+    if (flag_check_return != ARGS_RETURN_CONTINUE) return flag_check_return;
+    flag_check_return = flagIsNum(break_long_flag);
+    if (flag_check_return != ARGS_RETURN_CONTINUE) return flag_check_return;
+    flag_check_return = flagIsNum(sessions_flag);
+    if (flag_check_return != ARGS_RETURN_CONTINUE) return flag_check_return;
 
-    time_t start_time = time(NULL);
-    time_t end_time = start_time + duration_work;
+    usize duration_work = work_flag.is_present ? atoi(work_flag.opts[0]) * MIN : DEFAULT_WORK;
+    usize duration_break_short =
+        break_short_flag.is_present ? atoi(break_short_flag.opts[0]) * MIN : DEFAULT_BREAK_SHORT;
+    usize duration_break_long =
+        break_long_flag.is_present ? atoi(break_long_flag.opts[0]) * MIN : DEFAULT_BREAK_LONG;
+    usize sessions = sessions_flag.is_present ? atoi(sessions_flag.opts[0]) * MIN : DEFAULT_SESSIONS;
+
+    time_t end_time = time(NULL) + duration_work;
+    usize remaining_time = duration_work;
+
+    State state = {
+        .stage = STAGE_WORK,
+        .session = 1,
+    };
+
+    char *stage_name = "Focus";
 
     int width = 0, height = 0;
     initscr();
@@ -85,14 +129,37 @@ int main(int argc, char **argv) {
     noecho();
     nodelay(stdscr, TRUE);
     for (;; napms(1), erase(), refresh()) {
-        usize remaining_time = end_time - time(NULL);
-        usize remaining_mins = remaining_time / 60;
-        usize remaining_secs = remaining_time % 60;
-
         getmaxyx(stdscr, height, width);
 
+        if (remaining_time == 0) {
+            bool completed_set = !(state.session % sessions);
+            if (state.stage == STAGE_WORK) {
+                if (completed_set) {
+                    state.stage = STAGE_BREAK_LONG;
+                    stage_name = "Long break";
+                    end_time = time(NULL) + duration_break_long;
+                }
+                else {
+                    state.stage = STAGE_BREAK_SHORT;
+                    stage_name = "Short break";
+                    end_time = time(NULL) + duration_break_short;
+                }
+            }
+            else {
+                if (completed_set) state.session = 1;
+                else state.session += 1;
+                state.stage = STAGE_WORK;
+                stage_name = "Focus";
+                end_time = time(NULL) + duration_work;
+            }
+        }
+
+        remaining_time = end_time - time(NULL);
+        usize remaining_mins = remaining_time / MIN;
+        usize remaining_secs = remaining_time % MIN;
+
         char remaining_time_str[TIME_STR_LEN];
-        snprintf(remaining_time_str, TIME_STR_LEN, "%02ld:%02ld", remaining_mins, remaining_secs);
+        snprintf(remaining_time_str, TIME_STR_LEN, "%s: %02ld:%02ld (session %ld)", stage_name, remaining_mins, remaining_secs, state.session);
         mvaddstr(height / 2, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
 
         timeout(1000);
