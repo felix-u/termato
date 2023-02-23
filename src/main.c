@@ -122,6 +122,8 @@ int main(int argc, char **argv) {
 
     char *stage_name = "Focus";
 
+    bool should_quit = false;
+
     int width = 0, height = 0;
     initscr();
     cbreak();
@@ -166,6 +168,21 @@ int main(int argc, char **argv) {
 
         int c = getch();
         if (c == 'q') break;
+        if (c == ' ') {
+            time_t pause_time = time(NULL);
+            for (;;) {
+                c = getch();
+                if (c == ' ') {
+                    end_time += time(NULL) - pause_time;
+                    break;
+                }
+                else if (c == 'q') {
+                    should_quit = true;
+                    break;
+                }
+            }
+        }
+        if (should_quit) break;
     }
     endwin();
 
