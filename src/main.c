@@ -58,36 +58,44 @@ int main(int argc, char **argv) {
     args_Flag work_flag = {
         .name_short = 'w',
         .name_long = "work",
-        .help_text = "specify the length of time for work periods, in minutes (default 25)",
+        .help_text = "specify the length of time for work periods, in minutes (default: 25)",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
     };
     args_Flag break_short_flag = {
         .name_short = 'b',
         .name_long = "short-break",
-        .help_text = "specify the length of time for short break periods, in minutes (default 5)",
+        .help_text = "specify the length of time for short break periods, in minutes (default: 5)",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
     };
     args_Flag break_long_flag = {
         .name_short = 'l',
         .name_long = "long-break",
-        .help_text = "specify the length of time for long break periods, in minutes (default 20)",
+        .help_text = "specify the length of time for long break periods, in minutes (default: 20)",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
     };
     args_Flag sessions_flag = {
         .name_short = 's',
         .name_long = "sessions",
-        .help_text = "specify the number of work periods before a long break (default 4)",
+        .help_text = "specify the number of work periods before a long break (default: 4)",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
+    };
+    args_Flag alert_flag = {
+        .name_short = 'a',
+        .name_long = "alert",
+        .help_text = "specify a command to run upon timer state change (default: none)",
+        .type = ARGS_SINGLE_OPT,
+        .expects = ARGS_EXPECTS_STRING,
     };
     args_Flag *flags[] = {
         &work_flag,
         &break_short_flag,
         &break_long_flag,
         &sessions_flag,
+        &alert_flag,
         &ARGS_HELP_FLAG,
         &ARGS_VERSION_FLAG,
     };
@@ -139,6 +147,7 @@ int main(int argc, char **argv) {
         usize target_x = 0;
 
         if (remaining_time == 0) {
+            if (alert_flag.is_present) system(alert_flag.opts[0]);
             bool completed_set = !(state.session % sessions);
             if (state.stage == STAGE_WORK) {
                 if (completed_set) {
