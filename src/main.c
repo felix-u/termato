@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <ncurses.h>
 
@@ -9,6 +10,9 @@
 #define ARGS_IMPLEMENTATION
 #include "./args.h"
 #include "./better_int_types.h"
+
+
+#define TIME_STR_LEN 16
 
 
 int main(int argc, char **argv) {
@@ -28,12 +32,27 @@ int main(int argc, char **argv) {
     });
     if (args_return != ARGS_RETURN_CONTINUE) return args_return;
 
-    int width = 0, height = 0;
+    usize duration = 5;
+    time_t start_time = time(NULL);
+    time_t end_time = start_time + duration;
 
+    int width = 0, height = 0;
     initscr();
-    for (getmaxyx(stdscr, height, width); getch() != 'q'; resizeterm(height, width), refresh()) {
-        mvprintw(height / 2, (width - 11) / 2, "Hello, World!");
-        // if (getch() == 'q') break;
+    cbreak();
+    curs_set(0);
+    noecho();
+    nodelay(stdscr, TRUE);
+    for (;; napms(1), erase(), refresh()) {
+        usize remaining_time = end_time - time(NULL);
+
+        getmaxyx(stdscr, height, width);
+
+        char remaining_time_str[TIME_STR_LEN];
+        snprintf(remaining_time_str, TIME_STR_LEN, "%ld", remaining_time);
+        mvaddstr(height / 2, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
+
+        int c = getch();
+        if (c == 'q' || remaining_time == 0) break;
     }
     endwin();
 
