@@ -1,27 +1,36 @@
+NAME=termato
 VERSION=0.1-dev
 
+src = $(wildcard src/*.c)
+obj = $(src:.c=.o)
+
 CFLAGS=-std=c99 -pedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow \
-	   -Wextra -Wall -Wno-unused-but-set-variable
-DEBUGFLAGS=-Og -g -pg
-RELEASEFLAGS=-O3 -s
-LIBS=-lm
+	   -Wextra -Wall
+DEBUGFLAGS=-Og -g -ggdb
+RELEASEFLAGS=-O3 -s -march=native
+LIBS=-lncurses
+CROSSCC=zig cc
 
-termato: src/*
-	$(CC) $(CFLAGS) $(DEBUGFLAGS) $(LIBS) -o termato src/main.c
+default: $(obj)
+	$(CC) $(CFLAGS) $(DEBUGFLAGS) $(LIBS) -o $(NAME) $^
 
-release: src/*
-	$(CC) $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o termato src/main.c -march=native
+release: $(obj)
+	$(CC) $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o $(NAME) $^
 
-cross: src/*
+cross: $(obj)
 	mkdir -p release
-	zig cc -static -target x86_64-windows     $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o release/termato-v$(VERSION)-x86_64-win.exe  src/main.c
-	zig cc -static -target aarch64-windows    $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o release/termato-v$(VERSION)-aarch64-win.exe src/main.c
-	zig cc -static -target x86_64-linux-musl  $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o release/termato-v$(VERSION)-x86_64-linux    src/main.c
-	zig cc -static -target aarch64-linux-musl $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o release/termato-v$(VERSION)-aarch64-linux   src/main.c
-	zig cc -static -target x86_64-macos       $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o release/termato-v$(VERSION)-x86_64-macos    src/main.c
-	zig cc -static -target aarch64-macos      $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o release/termato-v$(VERSION)-aarch64-macos   src/main.c
+	$(CROSSCC) -static -target x86_64-windows     $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o release/$(NAME)-v$(VERSION)-x86_64-win.exe  $^
+	$(CROSSCC) -static -target aarch64-windows    $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o release/$(NAME)-v$(VERSION)-aarch64-win.exe $^
+	$(CROSSCC) -static -target x86_64-linux-musl  $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o release/$(NAME)-v$(VERSION)-x86_64-linux    $^
+	$(CROSSCC) -static -target aarch64-linux-musl $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o release/$(NAME)-v$(VERSION)-aarch64-linux   $^
+	$(CROSSCC) -static -target x86_64-macos       $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o release/$(NAME)-v$(VERSION)-x86_64-macos    $^
+	$(CROSSCC) -static -target aarch64-macos      $(CFLAGS) $(RELEASEFLAGS) $(LIBS) -o release/$(NAME)-v$(VERSION)-aarch64-macos   $^
 
 copy:
-	cp termato ~/.local/bin/
+	cp $(NAME) ~/.local/bin/
 
 install: release copy
+
+.PHONY: clean
+clean:
+	rm -f $(obj) progdebug

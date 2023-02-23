@@ -1,5 +1,5 @@
 // args.h - simple and robust command line argument parsing - felix-u 2023
-// 2023-02-21
+// 2023-02-22
 //
 //    This is an stb-style single-header-file C library.
 //
@@ -138,6 +138,7 @@ typedef enum ARGS_FLAG_TYPE {
 } ARGS_FLAG_TYPE;
 
 typedef enum ARGS_BINARY_POSITIONAL_TYPE {
+    ARGS_POSITIONAL_NONE,
     ARGS_POSITIONAL_SINGLE,
     ARGS_POSITIONAL_MULTI,
 } ARGS_BINARY_POSITIONAL_TYPE;
