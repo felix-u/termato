@@ -1,5 +1,5 @@
 NAME=$(notdir $(CURDIR))
-VERSION=0.1-dev
+VERSION=0.2-dev
 
 src = $(wildcard src/*.c)
 obj = $(src:.c=.o)
