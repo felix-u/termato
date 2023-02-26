@@ -6,7 +6,7 @@
 #include <ncurses.h>
 
 #define ARGS_BINARY_NAME "termato"
-#define ARGS_BINARY_VERSION "0.2-dev"
+#define ARGS_BINARY_VERSION "0.2"
 #define ARGS_IMPLEMENTATION
 #include "./args.h"
 #include "./better_int_types.h"
