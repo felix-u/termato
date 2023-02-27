@@ -26,6 +26,7 @@ termato <OPTION>...
 KEYBINDS:
 SPACE	pause or unpause your session
 n	skip to the next period
+q	quit
 
 OPTIONS:
   -f, --focus <NUM>

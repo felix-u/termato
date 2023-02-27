@@ -6,7 +6,7 @@
 #include <ncurses.h>
 
 #define ARGS_BINARY_NAME "termato"
-#define ARGS_BINARY_VERSION "0.2"
+#define ARGS_BINARY_VERSION "0.3-dev"
 #define ARGS_IMPLEMENTATION
 #include "./args.h"
 #include "./better_int_types.h"
@@ -111,7 +111,8 @@ int main(int argc, char **argv) {
         .extra_usage_text =
         "KEYBINDS:\n"
         "SPACE\tpause or unpause your session\n"
-        "n\tskip to the next period"
+        "n\tskip to the next period\n"
+        "q\tquit"
         ,
     });
     if (args_return != ARGS_RETURN_CONTINUE) return args_return;
