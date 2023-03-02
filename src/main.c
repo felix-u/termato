@@ -6,7 +6,7 @@
 #include <ncurses.h>
 
 #define ARGS_BINARY_NAME "termato"
-#define ARGS_BINARY_VERSION "0.3-dev"
+#define ARGS_BINARY_VERSION "0.3"
 #define ARGS_IMPLEMENTATION
 #include "./args.h"
 #include "./better_int_types.h"
@@ -199,7 +199,9 @@ int main(int argc, char **argv) {
 
         char remaining_time_str[STR_CAP];
         snprintf(remaining_time_str, STR_CAP, "%02ld:%02ld", remaining_mins, remaining_secs);
+        attron(A_BOLD);
         mvaddstr(height / 2 - 1, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
+        attroff(A_BOLD);
         mvaddstr(height / 2, (width - strlen(stage_str)) / 2, stage_str);
 
         timeout(1000);
