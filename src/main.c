@@ -6,7 +6,7 @@
 #include <ncurses.h>
 
 #define ARGS_BINARY_NAME "termato"
-#define ARGS_BINARY_VERSION "0.3"
+#define ARGS_BINARY_VERSION "0.4"
 #define ARGS_IMPLEMENTATION
 #include "./args.h"
 #include "./better_int_types.h"
@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
         break_short_flag.is_present ? atoi(break_short_flag.opts[0]) * MIN : DEFAULT_BREAK_SHORT;
     durations[STAGE_BREAK_LONG] =
         break_long_flag.is_present ? atoi(break_long_flag.opts[0]) * MIN : DEFAULT_BREAK_LONG;
-    usize sessions = sessions_flag.is_present ? atoi(sessions_flag.opts[0]) * MIN : DEFAULT_SESSIONS;
+    usize sessions = sessions_flag.is_present ? atoi(sessions_flag.opts[0]) : DEFAULT_SESSIONS;
 
     time_t end_time = time(NULL) + durations[STAGE_FOCUS];
     usize remaining_time = durations[STAGE_FOCUS];

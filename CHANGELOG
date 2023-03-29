@@ -1,1 +1,1 @@
-Remaining time is now bolded
+- Fix bug where `--sessions` argument was multiplied by 60
