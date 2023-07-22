@@ -9,7 +9,6 @@
 #define ARGS_BINARY_VERSION "0.4"
 #define ARGS_IMPLEMENTATION
 #include "./args.h"
-#include "./better_int_types.h"
 
 #define MIN 60
 #define STR_CAP 256
@@ -25,7 +24,7 @@ typedef struct State {
         STAGE_BREAK_LONG,
         STAGE_COUNT,
     } stage;
-    usize session;
+    size_t session;
 } State;
 const char *stage_names[STAGE_COUNT] = {
     "Focus",
@@ -35,7 +34,7 @@ const char *stage_names[STAGE_COUNT] = {
 
 
 bool strIsDigits(char *str) {
-    for (usize i = 0; i < strlen(str); i++) {
+    for (size_t i = 0; i < strlen(str); i++) {
         if (str[i] < '0' || str[i] > '9') return false;
     }
     return true;
@@ -100,7 +99,7 @@ int main(int argc, char **argv) {
         &ARGS_HELP_FLAG,
         &ARGS_VERSION_FLAG,
     };
-    usize positional_num = 0;
+    size_t positional_num = 0;
     int args_return = args_proc((args_Proc_Args) {
         argc, argv,
         .flags_count = sizeof(flags) / sizeof(flags[0]),
@@ -126,7 +125,7 @@ int main(int argc, char **argv) {
     flag_check_return = flagIsNum(sessions_flag);
     if (flag_check_return != ARGS_RETURN_CONTINUE) return flag_check_return;
 
-    usize durations[STAGE_COUNT] = {
+    size_t durations[STAGE_COUNT] = {
         DEFAULT_FOCUS,
         DEFAULT_BREAK_SHORT,
         DEFAULT_BREAK_LONG,
@@ -137,10 +136,10 @@ int main(int argc, char **argv) {
         break_short_flag.is_present ? atoi(break_short_flag.opts[0]) * MIN : DEFAULT_BREAK_SHORT;
     durations[STAGE_BREAK_LONG] =
         break_long_flag.is_present ? atoi(break_long_flag.opts[0]) * MIN : DEFAULT_BREAK_LONG;
-    usize sessions = sessions_flag.is_present ? atoi(sessions_flag.opts[0]) : DEFAULT_SESSIONS;
+    size_t sessions = sessions_flag.is_present ? atoi(sessions_flag.opts[0]) : DEFAULT_SESSIONS;
 
     time_t end_time = time(NULL) + durations[STAGE_FOCUS];
-    usize remaining_time = durations[STAGE_FOCUS];
+    size_t remaining_time = durations[STAGE_FOCUS];
 
     State state = {
         .stage = STAGE_FOCUS,
@@ -158,6 +157,7 @@ int main(int argc, char **argv) {
     curs_set(0);
     noecho();
     nodelay(stdscr, TRUE);
+
     for (;; napms(1), erase(), refresh()) {
         getmaxyx(stdscr, height, width);
 
@@ -165,6 +165,7 @@ int main(int argc, char **argv) {
 
         if (remaining_time == 0) {
             bool completed_set = !(state.session % sessions);
+
             if (state.stage == STAGE_FOCUS) {
                 if (completed_set) {
                     state.stage = STAGE_BREAK_LONG;
@@ -183,8 +184,9 @@ int main(int argc, char **argv) {
                 snprintf(stage_str, STR_CAP, "%s (%ld/%ld)", stage_names[state.stage], state.session, sessions);
                 end_time = time(NULL) + durations[STAGE_FOCUS];
             }
+
             if (notify_flag.is_present) {
-                usize notify_len = strlen(notify_flag.opts[0]) + STR_CAP;
+                size_t notify_len = strlen(notify_flag.opts[0]) + STR_CAP;
                 char notify_str[notify_len];
                 snprintf(notify_str, notify_len, notify_flag.opts[0], "%s - %ld minutes");
                 char notify_str_2[notify_len];
@@ -194,8 +196,8 @@ int main(int argc, char **argv) {
         }
 
         remaining_time = end_time - time(NULL);
-        usize remaining_mins = remaining_time / MIN;
-        usize remaining_secs = remaining_time % MIN;
+        size_t remaining_mins = remaining_time / MIN;
+        size_t remaining_secs = remaining_time % MIN;
 
         char remaining_time_str[STR_CAP];
         snprintf(remaining_time_str, STR_CAP, "%02ld:%02ld", remaining_mins, remaining_secs);
@@ -210,8 +212,10 @@ int main(int argc, char **argv) {
         if (c == 'n') remaining_time = 0;
         if (c == 'q') break;
         if (c == ' ') paused = true;
+
         if (paused) {
             time_t pause_time = time(NULL);
+
             for (;;) {
                 napms(1);
                 erase();
