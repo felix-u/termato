@@ -18,10 +18,8 @@
 #define DEFAULT_BREAK_LONG (20 * MIN)
 #define DEFAULT_SESSIONS 4
 
-typedef struct State
-{
-    enum
-    {
+typedef struct State {
+    enum {
         STAGE_FOCUS,
         STAGE_BREAK_SHORT,
         STAGE_BREAK_LONG,
@@ -36,22 +34,16 @@ const char *stage_names[STAGE_COUNT] = {
     "Break",
 };
 
-bool
-strIsDigits(char *str)
-{
-    for (size_t i = 0; i < strlen(str); i++)
-    {
+bool strIsDigits(char *str) {
+    for (size_t i = 0; i < strlen(str); i++) {
         if (str[i] < '0' || str[i] > '9') return false;
     }
     return true;
 }
 
-int
-flagIsNum(args_Flag flag)
-{
+int flagIsNum(args_Flag flag) {
     if (!flag.is_present) return ARGS_RETURN_CONTINUE;
-    if (!strIsDigits(flag.opts[0]))
-    {
+    if (!strIsDigits(flag.opts[0])) {
         printf(
             "%s: '%s' is not a valid numeric value\n",
             ARGS_BINARY_NAME,
@@ -62,9 +54,7 @@ flagIsNum(args_Flag flag)
     return ARGS_RETURN_CONTINUE;
 }
 
-int
-main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     args_Flag focus_flag = {
         .name_short = 'f',
         .name_long = "focus",
@@ -162,10 +152,7 @@ main(int argc, char **argv)
     time_t end_time = time(NULL) + durations[STAGE_FOCUS];
     size_t remaining_time = durations[STAGE_FOCUS];
 
-    State state = {
-        .stage = STAGE_FOCUS,
-        .session = 1,
-    };
+    State state = {.stage = STAGE_FOCUS, .session = 1};
 
     bool should_quit = false;
 
@@ -186,32 +173,24 @@ main(int argc, char **argv)
     noecho();
     nodelay(stdscr, TRUE);
 
-    for (;; napms(1), erase(), refresh())
-    {
+    for (;; napms(1), erase(), refresh()) {
         getmaxyx(stdscr, height, width);
 
         bool paused = false;
 
-        if (remaining_time == 0)
-        {
+        if (remaining_time == 0) {
             bool completed_set = !(state.session % sessions);
 
-            if (state.stage == STAGE_FOCUS)
-            {
-                if (completed_set)
-                {
+            if (state.stage == STAGE_FOCUS) {
+                if (completed_set) {
                     state.stage = STAGE_BREAK_LONG;
                     end_time = time(NULL) + durations[STAGE_BREAK_LONG];
-                }
-                else
-                {
+                } else {
                     state.stage = STAGE_BREAK_SHORT;
                     end_time = time(NULL) + durations[STAGE_BREAK_SHORT];
                 }
                 snprintf(stage_str, STR_CAP, "%s", stage_names[state.stage]);
-            }
-            else
-            {
+            } else {
                 if (completed_set) state.session = 1;
                 else state.session += 1;
 
@@ -226,8 +205,7 @@ main(int argc, char **argv)
                 end_time = time(NULL) + durations[STAGE_FOCUS];
             }
 
-            if (notify_flag.is_present)
-            {
+            if (notify_flag.is_present) {
                 size_t notify_len = strlen(notify_flag.opts[0]) + STR_CAP;
                 char notify_str[notify_len];
                 snprintf(
@@ -272,12 +250,10 @@ main(int argc, char **argv)
         if (c == 'q') break;
         if (c == ' ') paused = true;
 
-        if (paused)
-        {
+        if (paused) {
             time_t pause_time = time(NULL);
 
-            for (;;)
-            {
+            for (;;) {
                 napms(1);
                 erase();
                 getmaxyx(stdscr, height, width);
@@ -295,13 +271,10 @@ main(int argc, char **argv)
                 refresh();
 
                 c = getch();
-                if (c == ' ')
-                {
+                if (c == ' ') {
                     end_time += time(NULL) - pause_time;
                     break;
-                }
-                else if (c == 'q')
-                {
+                } else if (c == 'q') {
                     should_quit = true;
                     break;
                 }
