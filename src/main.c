@@ -1,9 +1,8 @@
+#include <ncurses.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-#include <ncurses.h>
 
 #define ARGS_BINARY_NAME "termato"
 #define ARGS_BINARY_VERSION "0.4"
@@ -11,14 +10,18 @@
 #include "./args.h"
 
 #define MIN 60
+
 #define STR_CAP 256
+
 #define DEFAULT_FOCUS (25 * MIN)
 #define DEFAULT_BREAK_SHORT (5 * MIN)
 #define DEFAULT_BREAK_LONG (20 * MIN)
 #define DEFAULT_SESSIONS 4
 
-typedef struct State {
-    enum {
+typedef struct State
+{
+    enum
+    {
         STAGE_FOCUS,
         STAGE_BREAK_SHORT,
         STAGE_BREAK_LONG,
@@ -26,67 +29,82 @@ typedef struct State {
     } stage;
     size_t session;
 } State;
+
 const char *stage_names[STAGE_COUNT] = {
     "Focus",
     "Relax",
     "Break",
 };
 
-
-bool strIsDigits(char *str) {
-    for (size_t i = 0; i < strlen(str); i++) {
+bool
+strIsDigits(char *str)
+{
+    for (size_t i = 0; i < strlen(str); i++)
+    {
         if (str[i] < '0' || str[i] > '9') return false;
     }
     return true;
 }
 
-
-int flagIsNum(args_Flag flag) {
+int
+flagIsNum(args_Flag flag)
+{
     if (!flag.is_present) return ARGS_RETURN_CONTINUE;
-    if (!strIsDigits(flag.opts[0])) {
-        printf("%s: '%s' is not a valid numeric value\n", ARGS_BINARY_NAME, flag.opts[0]);
+    if (!strIsDigits(flag.opts[0]))
+    {
+        printf(
+            "%s: '%s' is not a valid numeric value\n",
+            ARGS_BINARY_NAME,
+            flag.opts[0]);
         args_helpHint();
         return EX_USAGE;
     }
     return ARGS_RETURN_CONTINUE;
 }
 
-
-int main(int argc, char **argv) {
-
+int
+main(int argc, char **argv)
+{
     args_Flag focus_flag = {
         .name_short = 'f',
         .name_long = "focus",
-        .help_text = "specify the length of focus periods, in minutes (default: 25)",
+        .help_text =
+            "specify the length of focus periods, in minutes (default: 25)",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
     };
     args_Flag break_short_flag = {
         .name_short = 'b',
         .name_long = "short-break",
-        .help_text = "specify the length of short break periods, in minutes (default: 5)",
+        .help_text = "specify the length of short break periods, in minutes "
+                     "(default: 5)",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
     };
     args_Flag break_long_flag = {
         .name_short = 'l',
         .name_long = "long-break",
-        .help_text = "specify the length of long break periods, in minutes (default: 20)",
+        .help_text = "specify the length of long break periods, in minutes "
+                     "(default: 20)",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
     };
     args_Flag notify_flag = {
         .name_short = 'n',
         .name_long = "notify",
-        .help_text = "specify a command to run upon timer state change (default: none)\nThe first "
-                     "occurrence of `%s` will be substituted with the new timer state",
+        .help_text =
+            "specify a command to run upon timer state change (default: "
+            "none)\nThe first "
+            "occurrence of `%s` will be substituted with the new timer "
+            "state",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_STRING,
     };
     args_Flag sessions_flag = {
         .name_short = 's',
         .name_long = "sessions",
-        .help_text = "specify the number of work periods before a long break (default: 4)",
+        .help_text = "specify the number of work periods before a long break "
+                     "(default: 4)",
         .type = ARGS_SINGLE_OPT,
         .expects = ARGS_EXPECTS_NUM,
     };
@@ -100,19 +118,18 @@ int main(int argc, char **argv) {
         &ARGS_VERSION_FLAG,
     };
     size_t positional_num = 0;
-    int args_return = args_proc((args_Proc_Args) {
-        argc, argv,
+    int args_return = args_proc((args_Proc_Args){
+        argc,
+        argv,
         .flags_count = sizeof(flags) / sizeof(flags[0]),
         flags,
         .positional_num = &positional_num,
         .positional_cap = 0,
         .usage_description = "TUI pomodoro timer",
-        .extra_usage_text =
-        "KEYBINDS:\n"
-        "SPACE\tpause or unpause your session\n"
-        "n\tskip to the next period\n"
-        "q\tquit"
-        ,
+        .extra_usage_text = "KEYBINDS:\n"
+                            "SPACE\tpause or unpause your session\n"
+                            "n\tskip to the next period\n"
+                            "q\tquit",
     });
     if (args_return != ARGS_RETURN_CONTINUE) return args_return;
 
@@ -131,12 +148,16 @@ int main(int argc, char **argv) {
         DEFAULT_BREAK_LONG,
     };
 
-    durations[STAGE_FOCUS] = focus_flag.is_present ? atoi(focus_flag.opts[0]) * MIN : DEFAULT_FOCUS;
-    durations[STAGE_BREAK_SHORT] =
-        break_short_flag.is_present ? atoi(break_short_flag.opts[0]) * MIN : DEFAULT_BREAK_SHORT;
-    durations[STAGE_BREAK_LONG] =
-        break_long_flag.is_present ? atoi(break_long_flag.opts[0]) * MIN : DEFAULT_BREAK_LONG;
-    size_t sessions = sessions_flag.is_present ? atoi(sessions_flag.opts[0]) : DEFAULT_SESSIONS;
+    durations[STAGE_FOCUS] =
+        focus_flag.is_present ? atoi(focus_flag.opts[0]) * MIN : DEFAULT_FOCUS;
+    durations[STAGE_BREAK_SHORT] = break_short_flag.is_present
+                                     ? atoi(break_short_flag.opts[0]) * MIN
+                                     : DEFAULT_BREAK_SHORT;
+    durations[STAGE_BREAK_LONG] = break_long_flag.is_present
+                                    ? atoi(break_long_flag.opts[0]) * MIN
+                                    : DEFAULT_BREAK_LONG;
+    size_t sessions = sessions_flag.is_present ? atoi(sessions_flag.opts[0])
+                                               : DEFAULT_SESSIONS;
 
     time_t end_time = time(NULL) + durations[STAGE_FOCUS];
     size_t remaining_time = durations[STAGE_FOCUS];
@@ -149,48 +170,78 @@ int main(int argc, char **argv) {
     bool should_quit = false;
 
     char stage_str[STR_CAP];
-    snprintf(stage_str, STR_CAP, "%s (%ld/%ld)", stage_names[state.stage], state.session, sessions);
+    snprintf(
+        stage_str,
+        STR_CAP,
+        "%s (%ld/%ld)",
+        stage_names[state.stage],
+        state.session,
+        sessions);
 
-    int width = 0, height = 0;
+    int width = 0;
+    int height = 0;
     initscr();
     cbreak();
     curs_set(0);
     noecho();
     nodelay(stdscr, TRUE);
 
-    for (;; napms(1), erase(), refresh()) {
+    for (;; napms(1), erase(), refresh())
+    {
         getmaxyx(stdscr, height, width);
 
         bool paused = false;
 
-        if (remaining_time == 0) {
+        if (remaining_time == 0)
+        {
             bool completed_set = !(state.session % sessions);
 
-            if (state.stage == STAGE_FOCUS) {
-                if (completed_set) {
+            if (state.stage == STAGE_FOCUS)
+            {
+                if (completed_set)
+                {
                     state.stage = STAGE_BREAK_LONG;
                     end_time = time(NULL) + durations[STAGE_BREAK_LONG];
                 }
-                else {
+                else
+                {
                     state.stage = STAGE_BREAK_SHORT;
                     end_time = time(NULL) + durations[STAGE_BREAK_SHORT];
                 }
                 snprintf(stage_str, STR_CAP, "%s", stage_names[state.stage]);
             }
-            else {
+            else
+            {
                 if (completed_set) state.session = 1;
                 else state.session += 1;
+
                 state.stage = STAGE_FOCUS;
-                snprintf(stage_str, STR_CAP, "%s (%ld/%ld)", stage_names[state.stage], state.session, sessions);
+                snprintf(
+                    stage_str,
+                    STR_CAP,
+                    "%s (%ld/%ld)",
+                    stage_names[state.stage],
+                    state.session,
+                    sessions);
                 end_time = time(NULL) + durations[STAGE_FOCUS];
             }
 
-            if (notify_flag.is_present) {
+            if (notify_flag.is_present)
+            {
                 size_t notify_len = strlen(notify_flag.opts[0]) + STR_CAP;
                 char notify_str[notify_len];
-                snprintf(notify_str, notify_len, notify_flag.opts[0], "%s - %ld minutes");
+                snprintf(
+                    notify_str,
+                    notify_len,
+                    notify_flag.opts[0],
+                    "%s - %ld minutes");
                 char notify_str_2[notify_len];
-                snprintf(notify_str_2, notify_len, notify_str, stage_str, durations[state.stage] / MIN);
+                snprintf(
+                    notify_str_2,
+                    notify_len,
+                    notify_str,
+                    stage_str,
+                    durations[state.stage] / MIN);
                 system(notify_str_2);
             }
         }
@@ -200,9 +251,17 @@ int main(int argc, char **argv) {
         size_t remaining_secs = remaining_time % MIN;
 
         char remaining_time_str[STR_CAP];
-        snprintf(remaining_time_str, STR_CAP, "%02ld:%02ld", remaining_mins, remaining_secs);
+        snprintf(
+            remaining_time_str,
+            STR_CAP,
+            "%02ld:%02ld",
+            remaining_mins,
+            remaining_secs);
         attron(A_BOLD);
-        mvaddstr(height / 2 - 1, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
+        mvaddstr(
+            height / 2 - 1,
+            (width - strlen(remaining_time_str)) / 2,
+            remaining_time_str);
         attroff(A_BOLD);
         mvaddstr(height / 2, (width - strlen(stage_str)) / 2, stage_str);
 
@@ -213,25 +272,36 @@ int main(int argc, char **argv) {
         if (c == 'q') break;
         if (c == ' ') paused = true;
 
-        if (paused) {
+        if (paused)
+        {
             time_t pause_time = time(NULL);
 
-            for (;;) {
+            for (;;)
+            {
                 napms(1);
                 erase();
                 getmaxyx(stdscr, height, width);
                 const char *pause_text = "[Paused]";
-                mvaddstr(height / 2 - 1, (width - strlen(remaining_time_str)) / 2, remaining_time_str);
-                mvaddstr(height / 2, (width - strlen(stage_str)) / 2, stage_str);
-                mvaddstr(height / 2 + 1, (width - strlen(pause_text)) / 2, pause_text);
+                mvaddstr(
+                    height / 2 - 1,
+                    (width - strlen(remaining_time_str)) / 2,
+                    remaining_time_str);
+                mvaddstr(
+                    height / 2, (width - strlen(stage_str)) / 2, stage_str);
+                mvaddstr(
+                    height / 2 + 1,
+                    (width - strlen(pause_text)) / 2,
+                    pause_text);
                 refresh();
 
                 c = getch();
-                if (c == ' ') {
+                if (c == ' ')
+                {
                     end_time += time(NULL) - pause_time;
                     break;
                 }
-                else if (c == 'q') {
+                else if (c == 'q')
+                {
                     should_quit = true;
                     break;
                 }
